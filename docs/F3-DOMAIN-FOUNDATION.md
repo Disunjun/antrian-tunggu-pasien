@@ -102,22 +102,26 @@ Initial state:
 
 `WAITING`
 
-Possible progression:
+Active progression:
 
-`WAITING -> CALLED -> SERVING -> COMPLETED`
+`WAITING -> CALLED -> IN_SERVICE -> DONE`
 
 Alternative terminal state:
 
 `WAITING -> CANCELLED`
 
-A ticket that has reached a terminal state must not return to an active waiting state without an explicit domain operation.
+A ticket that has reached a terminal state must not return to an active waiting state through a normal transition.
 
 Terminal states:
 
-- `COMPLETED`
+- `DONE`
 - `CANCELLED`
 
----
+Additional operational state:
+
+- `SKIPPED`
+
+`SKIPPED` represents a ticket that is intentionally bypassed during queue operation and must not automatically return to `WAITING`.
 
 ## 5. Queue Invariants
 
@@ -126,11 +130,12 @@ The following invariants must be preserved:
 1. A queue ticket belongs to exactly one patient.
 2. A queue ticket belongs to one defined queue/service context.
 3. Queue order must be deterministic.
-4. Only eligible waiting tickets may be called.
-5. A completed ticket cannot become waiting again through a normal transition.
-6. A cancelled ticket cannot become waiting again through a normal transition.
-7. Queue state must not be derived from presentation-layer state.
-8. Domain rules must be enforceable independently from the UI.
+4. Only eligible `WAITING` tickets may be called.
+5. A `DONE` ticket cannot become `WAITING` again through a normal transition.
+6. A `CANCELLED` ticket cannot become `WAITING` again through a normal transition.
+7. A `SKIPPED` ticket cannot become `WAITING` again through a normal transition without an explicit domain operation.
+8. Queue state must not be derived from presentation-layer state.
+9. Domain rules must be enforceable independently from the UI.
 
 ---
 
