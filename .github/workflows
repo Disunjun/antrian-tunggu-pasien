@@ -1,1 +1,60 @@
+name: Foundation Validation
 
+on:
+  push:
+    branches: [foundation-v1]
+  pull_request:
+    branches: [main, foundation-v1]
+
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: antrian_tunggu_pasien
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d antrian_tunggu_pasien"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/antrian_tunggu_pasien
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Apply database migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          for migration in database/migrations/*.sql; do
+            echo "Applying $migration"
+            PGPASSWORD=postgres psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$migration"
+          done
+
+      - name: Database role-integrity tests
+        shell: bash
+        run: |
+          PGPASSWORD=postgres psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/tests/role_integrity.sql
+
+      - name: API unit tests
+        run: pnpm --filter @antrian/api test
