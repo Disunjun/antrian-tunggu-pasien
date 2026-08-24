@@ -1,0 +1,3 @@
+Foundation V1 Review 2: role/profile integrity correction.
+Migration 009 enforces PATIENT/STAFF/DOCTOR/ADMIN role compatibility at the database boundary and prevents incompatible role changes while profiles/assignments exist.
+Validation still required: fresh PostgreSQL migration 001-009, role integrity tests, API typecheck/build/tests, and CI.
