@@ -2,10 +2,11 @@ name: Foundation Validation
 
 on:
   push:
-    branches: [foundation-v1]
-  pull_request:
-    branches: [main, foundation-v1]
+    branches: [foundation-v1, f3-domain-foundation]
 
+  pull_request:
+    branches: [main, foundation-v1, f3-domain-foundation]
+    
 jobs:
   foundation:
     runs-on: ubuntu-latest
@@ -40,6 +41,9 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      - name: Queue lifecycle tests
+        run: pnpm --filter @antrian/types test
 
       - name: Apply database migrations
         shell: bash
